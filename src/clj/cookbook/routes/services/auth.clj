@@ -49,14 +49,23 @@
             (dissoc :pass)
             (assoc :last-login (LocalDateTime/now)))))))
 
-(defn login! [id pass {:keys [remote-addr server-name session]}]
+
+(defn login! [{:keys [session params] :as req}]
+  (if-let [user (authenticated-user (decode-auth (auth req)))]
+    (-> params
+        :redirect
+        response
+        (assoc :session (assoc session :identity user)))
+    (http/unauthorized {:error "invalid login"})))
+
+(defn login! [{{:keys [id pass redirect]} :params session :session}]
   (if-let [user (authenticate! id pass)]
     (do
-      (log/info "user:" id "logged in from" remote-addr server-name)
+      (log/info "user:" id "logged in" )
       (-> (response/ok (dissoc user :pass))
           (assoc :session (assoc session :identity user))))
     (do
-      (log/info "login failed for" id remote-addr server-name)
+      (log/info "login failed for" id)
       (response/unauthorized {:error "The username or password was incorrect."}))))
 
 (defn logout! [_]

@@ -32,7 +32,7 @@
   (format-validation-errors
     (b/validate
       (fn [{:keys [path]}]
-        ({[:id]           ID
+        ({[:id]           "ID is required"
           [:is-admin]     "You must specify whether the user is an admin"
           [:pass-confirm] "Password confirmation doesn't match"
           [:active]       "You must specify whether the user is active"}

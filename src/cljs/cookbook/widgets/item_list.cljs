@@ -14,11 +14,11 @@
      (fn [path idx]
        [:div.field.has-addons
         [:div.control
-         [:a.button.is-static.is-small
+         [:a.button.is-static
           [:span.icon
-           [:i.material-icons.is-small "drag_handle"]]]]
+           [:i.fas.fa-grip-lines]]]]
         [:div.control.is-expanded
-         [:input.input.is-small
+         [:input.input
           {:type        "text"
            :disabled    @(rf/subscribe [:resources/pending?])
            :value       @(rf/subscribe [:recipe/field [path idx]])
@@ -27,11 +27,11 @@
                            key-enter (rf/dispatch [:recipe/new-list-item path])
                            :default)}]]
         [:div.control
-         [:button.button.is-small
+         [:button.button
           {:disabled @(rf/subscribe [:resources/pending?])
            :on-click #(rf/dispatch [:recipe/remove-from-list path idx])}
-          [:span.icon.is-small
-           [:i.material-icons "delete"]]]]])}))
+          [:span.icon
+           [:i.fas.fa-trash]]]]])}))
 
 (defn item-list [label path]
   [:div.field.item-list
@@ -42,4 +42,4 @@
    [:button.button.is-small
     {:on-click #(rf/dispatch [:recipe/new-list-item path])}
     [:span.icon.is-small
-     [:i.material-icons "add"]]]])
+     [:i.fas.fa-plus]]]])

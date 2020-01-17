@@ -52,15 +52,16 @@
      :disabled @(rf/subscribe [:resources/pending?])
      :on-click #(reset! view-atom view)}
     [:span.icon.is-small
-     [:i.material-icons icon]]]])
+     [:i.fas
+      {:class (str "fa-" icon)}]]]])
 
 (defn md-editor [path]
   (r/with-let [view (r/atom :split)]
     [:div
      [:div.field.has-addons
-      [editor-view-button view :edit "edit"]
-      [editor-view-button view :split "vertical_split"]
-      [editor-view-button view :preview "description"]]
+      [editor-view-button view :edit "pen"]
+      [editor-view-button view :split "columns"]
+      [editor-view-button view :preview "file-alt"]]
      (case @view
        :split
        [:div.columns

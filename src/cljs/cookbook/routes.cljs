@@ -1,6 +1,7 @@
 (ns cookbook.routes
   (:require
     [cookbook.pages.home :refer [home-page]]
+    [cookbook.pages.login :refer [login-page]]
     [cookbook.pages.recipe :refer [view-recipe-page edit-recipe-page]]
     [re-frame.core :as rf]
     [reagent.core :as r]
@@ -37,7 +38,7 @@
                 (not @(rf/subscribe [:skip-loading-screen])))
          [:div.pageloader.has-background-warning.is-active
           [:span.title "Loading..."]]
-         [page])])))
+         [login-page])])))
 
 (def routes
   [["/"

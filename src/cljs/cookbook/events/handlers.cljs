@@ -101,6 +101,14 @@
         (dissoc :skip-loading-screen))))
 
 (rf/reg-event-fx
+  :http/login
+  (fn [_ [resource-id user]]
+    {:http {:method ajax/POST
+            :url "/login"
+            :resource-id resource-id
+            :on-success }}))
+
+(rf/reg-event-fx
   :http/load-recipes
   (fn [_ [resource-id]]
     {:http {:method      ajax/GET
