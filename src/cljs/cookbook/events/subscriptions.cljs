@@ -41,3 +41,8 @@
   :resources/pending?
   (fn [db _]
     (boolean (not-empty (:pending-resources db)))))
+
+(rf/reg-sub
+  :db
+  (fn [db _]
+    db))

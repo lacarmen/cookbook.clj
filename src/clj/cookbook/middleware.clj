@@ -1,18 +1,16 @@
 (ns cookbook.middleware
   (:require
-    [cookbook.env :refer [defaults]]
-    [cheshire.generate :as cheshire]
-    [cognitect.transit :as transit]
-    [clojure.tools.logging :as log]
-    [cookbook.layout :refer [error-page]]
-    [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
-    [cookbook.middleware.formats :as formats]
-    [muuntaja.middleware :refer [wrap-format wrap-params]]
     [cookbook.config :refer [env]]
+    [cookbook.env :refer [defaults]]
+    [cookbook.layout :refer [error-page]]
+    [cookbook.middleware.formats :as formats]
+    ;;
+    [clojure.tools.logging :as log]
+    [immutant.web.middleware :refer [wrap-session]]
+    [muuntaja.middleware :refer [wrap-format wrap-params]]
     [ring-ttl-session.core :refer [ttl-memory-store]]
-    [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
-    [reitit.ring :as ring]
-    ))
+    [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
+    [ring.middleware.defaults :refer [site-defaults wrap-defaults]]))
 
 (defn wrap-internal-error [handler]
   (fn [req]
@@ -42,6 +40,7 @@
 
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
+      (wrap-session {:cookie-attrs {:http-only true}})
       (wrap-defaults
         (-> site-defaults
             (assoc-in [:security :anti-forgery] false)

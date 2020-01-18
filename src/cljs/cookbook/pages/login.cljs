@@ -3,45 +3,45 @@
     [re-frame.core :as rf]
     [reagent.core :as r]))
 
-[:form {:method "POST" :action "https://pingstack.io/app/login"}
- [:input {:type "hidden" :name "_token" :value "CH8hVQHyoRl98Kz7c3Lu4tu9J13g36sDucZkMEzl"}]
- [:div.form-group
-  [:label "Email Address"]
-  [:input#email.form-control {:type "email" :name "email" :value "" :required "" :autofocus ""}]]
- [:div.form-group
-  [:label "Password"]
-  [:div.input-group.input-group-merge
-   [:input#password.form-control {:type "password" :name "password" :required ""}]]]
- [:div.form-group
-  [:div.form-check
-   [:input#remember.form-check-input {:type "checkbox" :name "remember"}]
-   [:label.form-check-label {:for "remember"} "Remember me"]]]
- [:button.btn.btn-lg.btn-block.btn-primary.mb-3 {:type "submit"} "Log in"]
- ]
+(def key-enter 13)
+
+(defn login-on-enter [user e]
+  (condp = (.-keyCode e)
+    key-enter (rf/dispatch [:http/login @user])
+    :default))
 
 (defn login-page []
   (r/with-let [user (r/atom {})]
     [:section.section>div.container>div.content
-     [:div.field
-      [:div.control.has-icons-left
-       [:input.input
-        {:type        "text"
-         :placeholder "Username"
-         :value       (:id @user)
-         :on-change #(swap! user assoc :id (-> % .-target .-value))}]
-       [:span.icon.is-small.is-left
-        [:i.fas.fa-user]]]]
-     [:div.field
-      [:div.control.has-icons-left
-       [:input.input
-        {:type        "password"
-         :placeholder "Password"
-         :value       (:pass @user)
-         :on-change   #(swap! user assoc :pass (-> % .-target .-value))}]
-       [:span.icon.is-small.is-left
-        [:i.fas.fa-lock]]]]
-     [:div.field
-      [:div.control
-       [:button.button.is-warning.is-fullwidth
-        {:on-click #(println @user)}
-        "Login"]]]]))
+     [:div.columns.is-centered
+      [:div.column.is-half
+       [:h1.title.is-2.has-text-centered.has-text-weight-normal
+        [:i.fas.fa-cookie-bite]
+        " cookbook.clj"]
+       [:p.title.is-4.has-text-centered.has-text-weight-normal
+        "Sign in"]
+       [:div.field
+        [:label.label "Username"]
+        [:div.control.has-icons-left
+         [:input.input
+          {:type        "text"
+           :value       (:id @user)
+           :on-change   #(swap! user assoc :id (-> % .-target .-value))
+           :on-key-down (partial login-on-enter user)}]
+         [:span.icon.is-small.is-left
+          [:i.fas.fa-user]]]]
+       [:div.field
+        [:label.label "Password"]
+        [:div.control.has-icons-left
+         [:input.input
+          {:type        "password"
+           :value       (:pass @user)
+           :on-change   #(swap! user assoc :pass (-> % .-target .-value))
+           :on-key-down (partial login-on-enter user)}]
+         [:span.icon.is-small.is-left
+          [:i.fas.fa-lock]]]]
+       [:div.field
+        [:div.control
+         [:button.button.is-warning.is-fullwidth
+          {:on-click #(rf/dispatch [:http/login @user])}
+          "Login"]]]]]]))

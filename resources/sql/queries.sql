@@ -25,7 +25,7 @@ where id = :id
 -- :name get-user-by-id :? :1
 -- :doc retrieves a user record given the id
 select * from users
-where id = :id
+where id = :id and is_active is true
 
 -- :name delete-user! :! :n
 -- :doc deletes a user record given the id

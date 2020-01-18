@@ -46,27 +46,18 @@
       (when (hashers/check pass (:pass user))
         (db/update-user-last-login! {:id id})
         (-> user
-            (dissoc :pass)
-            (assoc :last-login (LocalDateTime/now)))))))
-
-
-(defn login! [{:keys [session params] :as req}]
-  (if-let [user (authenticated-user (decode-auth (auth req)))]
-    (-> params
-        :redirect
-        response
-        (assoc :session (assoc session :identity user)))
-    (http/unauthorized {:error "invalid login"})))
+            (dissoc :pass :last-login :is-active))))))
 
 (defn login! [{{:keys [id pass redirect]} :params session :session}]
   (if-let [user (authenticate! id pass)]
     (do
-      (log/info "user:" id "logged in" )
-      (-> (response/ok (dissoc user :pass))
+      (log/info "user:" id "logged in")
+      (-> (response/ok redirect)
           (assoc :session (assoc session :identity user))))
     (do
       (log/info "login failed for" id)
       (response/unauthorized {:error "The username or password was incorrect."}))))
 
-(defn logout! [_]
-  (assoc (response/ok) :session nil))
+(defn logout! [{:keys [session]}]
+  (-> (response/found "/login")
+      (assoc :session (dissoc session :identity))))

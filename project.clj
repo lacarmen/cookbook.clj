@@ -15,7 +15,7 @@
                  [day8.re-frame/http-fx "0.1.6"]
                  [expound "0.8.3"]
                  [funcool/struct "1.4.0"]
-                 [luminus-jetty "0.1.7"]
+                 [luminus-immutant "0.2.5"]
                  [luminus-migrations "0.6.6"]
                  [luminus-transit "0.1.2"]
                  [luminus/ring-ttl-session "0.3.3"]
@@ -52,7 +52,9 @@
   :target-path "target/%s/"
   :main ^:skip-aot cookbook.core
 
-  :plugins [[lein-shadow "0.1.7"]]
+  :plugins [[lein-shadow "0.1.7"]
+            [lein-immutant "2.1.0"]]
+
   :clean-targets ^{:protect false}
   [:target-path "target/cljsbuild"]
   :shadow-cljs

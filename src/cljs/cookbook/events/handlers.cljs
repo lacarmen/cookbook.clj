@@ -12,10 +12,16 @@
   :common/error
   :common/loading?
   :common/user
+  :auth/redirect
   :recipes
   :recipe
   :tags
   :selected-tag)
+
+(rf/reg-event-fx
+  :common/init-db
+  (fn [_ [_ user]]
+    {:dispatch [:common/set-user user]}))
 
 (rf/reg-event-db
   :common/navigate
@@ -43,7 +49,7 @@
 (rf/reg-event-fx
   :common/redirect!
   (fn [_ [_ url]]
-    {:common/redirect-fx! url}))
+    {:common/redirect-fx! (or url "/'")}))
 
 (rf/reg-event-db
   :common/ajax-error
@@ -102,11 +108,12 @@
 
 (rf/reg-event-fx
   :http/login
-  (fn [_ [resource-id user]]
-    {:http {:method ajax/POST
-            :url "/login"
+  (fn [{:keys [db]} [resource-id user]]
+    {:http {:method      ajax/POST
+            :url         "/login"
             :resource-id resource-id
-            :on-success }}))
+            :params      (assoc user :redirect (:auth/redirect db))
+            :on-success  [:common/redirect!]}}))
 
 (rf/reg-event-fx
   :http/load-recipes

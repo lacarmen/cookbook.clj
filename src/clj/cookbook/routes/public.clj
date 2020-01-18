@@ -10,4 +10,4 @@
                         (response/found (or (get-in request [:query :redirect]) "/"))
                         (layout/render "home.html")))
               :post auth/login!}]
-   ["/logout" {:post auth/logout!}]])
+   ["/logout" {:get auth/logout!}]])

@@ -43,7 +43,12 @@
     navigate!
     {:use-fragment false}))
 
+(defn load-page-data []
+  (when-let [user (js->clj js/identity :keywordize-keys true)]
+    (rf/dispatch-sync [:common/init-db user])))
+
 (defn init! []
   (start-router!)
+  (load-page-data)
   (ajax/load-interceptors!)
   (mount-components))

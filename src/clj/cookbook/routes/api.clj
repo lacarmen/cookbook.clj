@@ -7,8 +7,8 @@
 
 (def service-routes
   ["/api"
-   {#_#_:middleware [middleware/wrap-authorized
-                 middleware/wrap-enforce-admin]}
+   {:middleware [middleware/wrap-authorized
+                 #_middleware/wrap-enforce-admin]}
    ["/tags" {:get {:handler recipes/get-tags}}]
    ["/recipes"
     ["" {:get  {:handler recipes/get-recipes}
