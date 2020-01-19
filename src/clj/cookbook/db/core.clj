@@ -2,6 +2,7 @@
   (:require
     [cheshire.core :refer [generate-string parse-string parse-string-strict]]
     [clojure.java.jdbc :as jdbc]
+    [clojure.set :refer [rename-keys]]
     [clojure.string :as string]
     [clojure.tools.logging :as log]
     [clojure.walk :refer [postwalk]]
@@ -70,7 +71,7 @@
 (defn result-many-snake->kebab
   [this result options]
   (->> (hugsql.adapter/result-many this result options)
-       (map #(transform-keys ->kebab-case-keyword %))))
+       (mapv #(transform-keys ->kebab-case-keyword %))))
 
 (defmethod hugsql.core/hugsql-result-fn :1 [sym]
   'cookbook.db.core/result-one-snake->kebab)
@@ -78,16 +79,19 @@
 (defmethod hugsql.core/hugsql-result-fn :* [sym]
   'cookbook.db.core/result-many-snake->kebab)
 
+(defn to-date [^java.sql.Date sql-date]
+  (-> sql-date (.getTime) (java.util.Date.)))
+
 (extend-protocol jdbc/IResultSetReadColumn
   java.sql.Timestamp
   (result-set-read-column [v _2 _3]
-    (.toLocalDateTime v))
+    (to-date v))
   java.sql.Date
   (result-set-read-column [v _2 _3]
-    (.toLocalDate v))
+    (to-date v))
   java.sql.Time
   (result-set-read-column [v _2 _3]
-    (.toLocalTime v))
+    (to-date v))
   Array
   (result-set-read-column [v _ _] (vec (.getArray v)))
   PGobject
@@ -142,7 +146,15 @@
   (get-recipe-by-id {:id 3})
   (get-recipe-headers)
 
+
   (do
+    (create-user!
+      {:id "bob" :first-name "Bob" :last-name "Bobberton" :pass (buddy.hashers/encrypt "foobar") :email nil :admin false})
+    (create-user!
+      {:id "donald" :first-name "Donald" :last-name "Duck" :pass (buddy.hashers/encrypt "foobar") :email nil :admin false})
+    (create-user!
+      {:id "carmen" :first-name "Carmen", :last-name "La", :email "carmen.wla@gmail.com", :admin true, :pass (buddy.hashers/encrypt "foobar")})
+
     (create-recipe! {:tags   ["instant pot"]
                      :recipe {:title       "Beef curry"
                               :ingredients ["1 can coconut milk" "beef"]
@@ -160,8 +172,7 @@
                               :ingredients ["1 1/2 cups cooked rice" "1 cup shrimp" "1 tbsp fish sauce" "veggies"]
                               :directions  "1. cook **shrimp**\n1. add **veggies** and cook\n1. add **rice** and cook"}
                      :author "carmen"})
-    (create-recipe! {:id 4,
-                     :tags ["thai" "drink"],
+    (create-recipe! {:tags ["thai" "drink"],
                      :recipe {:title "Thai Iced Tea",
                               :directions "1. brew tea\n2. add sugar, and milk\n3. chill\n4. serve with ice",
                               :description "Refreshing Thai iced tea for a hot summer day",

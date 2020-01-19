@@ -76,6 +76,7 @@
   
   :npm-deps [[shadow-cljs "2.8.69"]
              [create-react-class "15.6.3"]
+             [moment "2.24.0"]
              [react "16.12.0"]
              [react-dom "16.12.0"]
              [react-beautiful-dnd "12.2.0"]]

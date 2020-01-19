@@ -3,7 +3,7 @@ create table users
  first_name varchar(30),
  last_name varchar(30),
  email varchar(30),
- admin boolean,
+ admin boolean default false,
  last_login timestamp,
- is_active boolean default true,
+ active boolean default true,
  pass varchar(300));

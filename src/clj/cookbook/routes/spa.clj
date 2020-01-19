@@ -16,4 +16,10 @@
    {:middleware [middleware/wrap-authorized]}
    ["/" spa-route]
    ["/recipe/:id" spa-route]
-   ["/recipe/:id/edit" spa-route]])
+   ["/recipe/:id/edit" spa-route]
+   ["/create-recipe" spa-route]
+   ["/profile" spa-route]
+   ["/users"
+    {:middleware [middleware/wrap-enforce-admin]}
+    ["" spa-route]
+    ["/:id" spa-route]]])

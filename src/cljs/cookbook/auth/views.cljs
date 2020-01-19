@@ -1,4 +1,4 @@
-(ns cookbook.pages.login
+(ns cookbook.auth.views
   (:require
     [re-frame.core :as rf]
     [reagent.core :as r]))

@@ -1,4 +1,4 @@
-(ns cookbook.events.utils)
+(ns cookbook.utils)
 
 (defn remove-at [v idx]
   (into

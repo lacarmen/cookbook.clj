@@ -6,7 +6,7 @@
 
 (defn preview [path]
   [:div.md-preview
-   {:dangerouslySetInnerHTML {:__html (md->html @(rf/subscribe [:recipe/field path]))}}])
+   {:dangerouslySetInnerHTML {:__html (md->html @(rf/subscribe [:data/get-value path]))}}])
 
 (defn editor [path]
   (let [editor (r/atom nil)]
@@ -20,7 +20,7 @@
                           :styleSelectedText false
                           :placeholder       "Directions"
                           :element           (r/dom-node e)
-                          :initialValue      @(rf/subscribe [:recipe/field path])
+                          :initialValue      @(rf/subscribe [:data/get-value path])
                           :insertTexts       {:image ["![](" ")"]
                                               :link  ["[" "]()"]}
                           :toolbar           ["bold" "italic" "|"
@@ -29,8 +29,8 @@
                                               "link" "image" "table" "horizontal-rule" "|"
                                               "guide"]})))
              .-codemirror
-             (.on "change" #(rf/dispatch [:recipe/update path (.value editor)])))
-         (add-watch (rf/subscribe [:resources/pending?])
+             (.on "change" #(rf/dispatch [:data/set-value path (.value editor)])))
+         (add-watch (rf/subscribe [:http/loading?])
                     :md-editor
                     (fn [_ _ _ new-state]
                       (if new-state
@@ -39,7 +39,7 @@
 
        :component-will-unmount
        (fn [_]
-         (remove-watch (rf/subscribe [:resources/pending?]) :md-editor)
+         (remove-watch (rf/subscribe [:http/loading?]) :md-editor)
          (.toTextArea @editor))
 
        :reagent-render
@@ -49,7 +49,7 @@
   [:div.control
    [:button.button
     {:class    (if (= view @view-atom) "has-background-warning")
-     :disabled @(rf/subscribe [:resources/pending?])
+     :disabled @(rf/subscribe [:http/loading?])
      :on-click #(reset! view-atom view)}
     [:span.icon.is-small
      [:i.fas

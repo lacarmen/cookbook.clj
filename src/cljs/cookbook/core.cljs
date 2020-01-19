@@ -1,15 +1,15 @@
 (ns cookbook.core
   (:require
-   [re-frame.core :as rf]
-   [reagent.core :as r]
-   [reitit.core :as reitit]
-   [reitit.frontend.easy :as rfe]
-   [cookbook.ajax :as ajax]
-   [cookbook.events.effects]
-   [cookbook.events.handlers]
-   [cookbook.events.subscriptions]
-   [cookbook.pages.home :refer [home-page]]
-   [cookbook.routes :as routes]))
+    [re-frame.core :as rf]
+    [reagent.core :as r]
+    [reitit.core :as reitit]
+    [reitit.frontend.easy :as rfe]
+    ;;
+    [cookbook.ajax :as ajax]
+    [cookbook.common.effects]
+    [cookbook.common.events]
+    [cookbook.common.subscriptions]
+    [cookbook.routes :as routes]))
 
 ;; -------------------------
 ;; Initialize app
@@ -28,7 +28,7 @@
                (str " | " page)))))
 
 (defn navigate! [match _]
-  (let [admin?    true #_(-> js/identity clj->js :admin)
+  (let [admin?     (-> js/identity clj->js :admin)
         req-admin? (get-in match [:data :admin?])]
     (set-page-title! match)
     (if req-admin?

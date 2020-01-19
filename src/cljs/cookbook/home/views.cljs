@@ -1,4 +1,4 @@
-(ns cookbook.pages.home
+(ns cookbook.home.views
   (:require
     [re-frame.core :as rf]
     [reagent.core :as r]))

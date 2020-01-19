@@ -1,8 +1,10 @@
 (ns cookbook.routes
   (:require
-    [cookbook.pages.home :refer [home-page]]
-    [cookbook.pages.login :refer [login-page]]
-    [cookbook.pages.recipe :refer [view-recipe-page edit-recipe-page]]
+    [cookbook.auth.views :refer [login-page]]
+    [cookbook.home.views :refer [home-page]]
+    [cookbook.profile.views :refer [profile-page]]
+    [cookbook.recipe.views :refer [view-recipe-page edit-recipe-page]]
+    [cookbook.users.views :refer [users-page]]
     [re-frame.core :as rf]
     [reagent.core :as r]
     ["react-beautiful-dnd" :as dnd]
@@ -27,11 +29,14 @@
      [:div#nav-menu.navbar-menu
       {:class (when @expanded? :is-active)}
       [:div.navbar-start
-       [nav-link "/create" "Create Recipe" :create-recipe]]
+       [nav-link "/create-recipe" "Create Recipe" :create-recipe]
+       (when @(rf/subscribe [:common/admin?])
+         [nav-link "/users" "User Management" :users])]
       [:div.navbar-end
        [:div.navbar-item
         [:p "Hello, "
          [:a.has-text-dark.has-text-weight-semibold
+          {:on-click #(rf/dispatch [:common/navigate! ::profile])}
           (:first-name @(rf/subscribe [:common/user]))]]]
        [:div.navbar-item.has-background-dark.is-paddingless
         {:style {:margin "0.85rem 0" :width "1px"}}]
@@ -46,48 +51,61 @@
       [page]
       [:div
        [navbar]
-       (if (and @(rf/subscribe [:resources/pending?])
-                (not @(rf/subscribe [:skip-loading-screen])))
+       (if (and @(rf/subscribe [:http/loading?])
+                (not @(rf/subscribe [:http/skip-loading-screen])))
          [:div.pageloader.has-background-warning.is-active
           [:span.title "Loading..."]]
-         [login-page])])))
+         [page])])))
 
 (def routes
   [["/"
     {:name        ::home
      :view        #'home-page
      :title       "Home"
-     :controllers [{:start (fn [_]
-                             (rf/dispatch [:http/load-recipes])
-                             (rf/dispatch [:set-selected-tag nil]))}]}]
+     :controllers [{:start (fn [_] (rf/dispatch [:page/init-home]))}]}]
    ["/login" {:name        ::login
               :view        #'login-page
               :title       "Login"
               :controllers [{:parameters {:query [:redirect]}
                              :start      (fn [params]
-                                           (rf/dispatch [:auth/set-redirect (get-in params [:query :redirect])]))}]}]
+                                           (rf/dispatch [:page/init-login (get-in params [:query :redirect])]))}]}]
    ["/logout" {:name ::logout}]
-   ["/create"
+   ["/recipe"
+    ["/:id"
+     {:name        ::view-recipe
+      :view        #'view-recipe-page
+      :title       "Recipe"
+      :controllers [{:parameters {:path [:id]}
+                     :start      (fn [params]
+                                   (rf/dispatch [:page/init-view-recipe (get-in params [:path :id])]))}]}]
+    ["/:id/edit"
+     {:name        ::edit-recipe
+      :view        #'edit-recipe-page
+      :title       "Edit Recipe"
+      :controllers [{:parameters {:path [:id]}
+                     :start      (fn [params]
+                                   (rf/dispatch [:page/init-edit-recipe (get-in params [:path :id])]))}]}]]
+   ["/create-recipe"
     {:name        ::create-recipe
      :view        #'edit-recipe-page
      :title       "Recipe"
      :controllers [{:start (fn [_]
-                             (rf/dispatch [:http/load-tags])
-                             (rf/dispatch [:set-recipe nil]))}]}]
-   ["/recipe/:id"
-    {:name        ::view-recipe
-     :view        #'view-recipe-page
-     :title       "Recipe"
-     :controllers [{:parameters {:path [:id]}
-                    :start      (fn [params]
-                                  (rf/dispatch [:http/load-recipe (get-in params [:path :id])]))}]}]
-   ["/recipe/:id/edit"
-    {:name        ::edit-recipe
-     :view        #'edit-recipe-page
-     :title       "Edit Recipe"
-     :controllers [{:parameters {:path [:id]}
-                    :start      (fn [params]
-                                  (rf/dispatch [:http/load-recipe (get-in params [:path :id])])
-                                  (rf/dispatch [:http/load-tags]))}]}]
-   ["/admin"
-    {:admin? true}]])
+                             (rf/dispatch [:page/init-create-recipe]))}]}]
+   ["/profile"
+    {:name        ::profile
+     :view        #'profile-page
+     :title       "Profile"
+     :controllers [{:start (fn [_] (rf/dispatch [:page/init-profile]))
+                    :stop  (fn [_] (rf/dispatch [:page/destroy-profile]))}]}]
+   ["/users"
+    ["" {:name        ::users
+         :view        #'users-page
+         :title       "Users"
+         :controllers [{:start (fn [_] (rf/dispatch [:page/init-users]))}]}]
+    ["/:id" {:name        ::edit-user
+              :view        #'profile-page
+              :title       "Edit User"
+              :controllers [{:parameters {:path [:id]}
+                             :start (fn [params]
+                                      (rf/dispatch [:page/init-edit-user (get-in params [:path :id])]))
+                             :stop (fn [_] (rf/dispatch [:page/destroy-edit-user]))}]}]]])

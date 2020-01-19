@@ -38,24 +38,25 @@
        vec))
 
 (defn- add-tag-and-close-typeahead
-  [recipe-tags-rx state & [new-tag]]
+  [path state & [new-tag]]
   (let [new-tag (some-> (or new-tag @(r/cursor state [:user-input]))
                         string/trim
                         not-empty)]
     (when new-tag
-      (rf/dispatch [:recipe/update :tags (conj (vec @recipe-tags-rx) new-tag)])
+      (rf/dispatch [:data/set-value path (conj (vec @(rf/subscribe [:data/get-value path]))
+                                               new-tag)])
       (swap! state assoc :user-input nil)
       (close-typeahead state))))
 
-(defn- typeahead-item [item idx recipe-tags-rx state]
+(defn- typeahead-item [item idx path state]
   (let [selected-index (r/cursor state [:selected-index])]
     [:a.dropdown-item
      {:class         (when (= @selected-index idx) "is-active")
       :on-mouse-over #(reset! selected-index (js/parseInt (.getAttribute (.-target %) "tabIndex")))
-      :on-click      #(add-tag-and-close-typeahead recipe-tags-rx state item)}
+      :on-click      #(add-tag-and-close-typeahead path state item)}
      item]))
 
-(defn- typeahead-list [recipe-tags-rx state]
+(defn- typeahead-list [path state]
   (let [{:keys [selections typeahead-hidden?]} @state
         mouse-on-list? (r/cursor state [:mouse-on-list?])]
     [:div
@@ -67,21 +68,22 @@
       [:div.dropdown-content
        (for [[idx item] (map-indexed vector selections)]
          ^{:key idx}
-         [typeahead-item item idx recipe-tags-rx state])]]]))
+         [typeahead-item item idx path state])]]]))
 
-(defn- tag-list [recipe-tags-rx all-tags]
-  (let [new-tags (-> (set @recipe-tags-rx)
+(defn- tag-list [path all-tags]
+  (let [tags @(rf/subscribe [:data/get-value path])
+        new-tags (-> (set tags)
                      (difference all-tags)
                      (not-empty))]
     (into
       [:div.tags.is-marginless]
-      (for [tag @recipe-tags-rx]
+      (for [tag tags]
         ^{:key tag}
         [:span.tag
          {:class (if (contains? new-tags tag) "is-default" "is-warning")}
          tag
          [:button.delete.is-small
-          {:on-click #(rf/dispatch [:recipe/update :tags (remove-tag @recipe-tags-rx tag)])}]]))))
+          {:on-click #(rf/dispatch [:data/set-value path (remove-tag tags tag)])}]]))))
 
 (def default-state
   {:typeahead-hidden? true
@@ -90,24 +92,25 @@
    :selections        []
    :user-input        nil})
 
-(defn tag-input [recipe-tags-rx all-tags-rx]
+(defn tag-input [path all-tags-rx]
   (r/with-let
-    [all-tags          (set (keys @all-tags-rx))
+    [recipe-tags-rx    (rf/subscribe [:data/get-value path])
+     all-tags          (set (keys @all-tags-rx))
      state             (r/atom default-state)
      typeahead-hidden? (r/cursor state [:typeahead-hidden?])
      mouse-on-list?    (r/cursor state [:mouse-on-list?])
      selected-index    (r/cursor state [:selected-index])
      selections        (r/cursor state [:selections])
      user-input        (r/cursor state [:user-input])
-     choose-selected   #(add-tag-and-close-typeahead recipe-tags-rx state (get (vec @selections) @selected-index))]
+     choose-selected   #(add-tag-and-close-typeahead path state (get (vec @selections) @selected-index))]
     [:div.tags-input
-     [tag-list recipe-tags-rx all-tags]
+     [tag-list path all-tags]
      [:div.control
-      {:class (if @(rf/subscribe [:resources/pending?]) "is-loading")}]
+      {:class (if @(rf/subscribe [:http/loading?]) "is-loading")}]
      [:input.input
       {:type        :text
 
-       :disabled    @(rf/subscribe [:resources/pending?])
+       :disabled    @(rf/subscribe [:http/loading?])
 
        :placeholder "Type tag and press enter to add"
 
@@ -139,8 +142,8 @@
                                     (swap! selected-index inc)
                                     (scroll-target-list % @selected-index)))
                        key-enter (if (neg? @selected-index)
-                                   (add-tag-and-close-typeahead recipe-tags-rx state)
+                                   (add-tag-and-close-typeahead path state)
                                    (choose-selected))
                        key-escape (close-typeahead state)
                        "Default")}]
-     [typeahead-list recipe-tags-rx state]]))
+     [typeahead-list path state]]))

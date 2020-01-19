@@ -1,4 +1,4 @@
-(ns cookbook.pages.recipe
+(ns cookbook.recipe.views
   (:require
     [markdown.core :refer [md->html]]
     [re-frame.core :as rf]
@@ -9,11 +9,11 @@
 
 (defn edit-recipe-page []
   [:section.section>div.container>div.content
-   [widgets/text-input "Title" :title]
-   [widgets/text-input "Description" :description]
-   [widgets/tag-input "Tags" :tags]
-   [widgets/item-list "Ingredients" :ingredients]
-   [widgets/md-editor "Directions" :directions]
+   [widgets/input :text "Title" [:recipe :title]]
+   [widgets/input :text "Description" [:recipe :description]]
+   [widgets/tag-input "Tags" [:recipe :tags]]
+   [widgets/item-list "Ingredients" [:recipe :ingredients]]
+   [widgets/md-editor "Directions" [:recipe :directions]]
    [:hr]
    [:div.buttons.is-pulled-right
     [:button.button

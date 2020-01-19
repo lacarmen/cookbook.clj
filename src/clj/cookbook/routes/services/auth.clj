@@ -5,35 +5,50 @@
     [buddy.hashers :as hashers]
     [clojure.tools.logging :as log]
     [ring.util.http-response :as response]
-    [conman.core :as conman])
-  (:import (java.time LocalDateTime)))
+    [conman.core :as conman]))
 
-(comment (db/create-user!
-           {:id "carmen" :first_name "Carmen", :last_name "La", :email "carmen.wla@gmail.com", :admin true, :pass (hashers/encrypt "foobar")}))
+(defn get-users [{session :session}]
+  (try
+    (response/ok (db/get-users {:id (get-in session [:identity :id])}))
+    (catch Exception e
+      (log/error "failed to get users" e)
+      (response/internal-server-error {:error "failed to get users"}))))
 
+(defn get-user-by-id [{:keys [path-params]}]
+  (try
+    (if-let [user (db/get-user-by-id {:id (:id path-params)})]
+      (response/ok (dissoc user :pass :last-login))
+      (response/not-found "User not found"))
+    (catch Exception e
+      (log/error "failed to get user" e)
+      (response/internal-server-error {:error "failed to get user"}))))
 
-(defn create-user! [user]
-  (if-let [errors (v/validate-create-user user)]
-    (do
-      (log/error "error creating user:" errors)
-      (response/bad-request {:error "invalid user"}))
-    (try
-      (response/ok
-        (db/create-user! (update user :pass hashers/encrypt)))
-      (catch Exception e
-        (log/error "failed to create user" e)
-        (response/internal-server-error {:error "failed to create user"})))))
+(defn create-user! [{user :params}]
+  (let [user (merge {:email nil :admin false} user)]
+    (if-let [errors (v/validate-create-user user)]
+      (do
+        (log/error "error creating user:" errors)
+        (response/bad-request {:error "invalid user"}))
+      (try
+        (response/ok
+          (db/create-user! (update user :pass hashers/encrypt)))
+        (catch Exception e
+          (log/error "failed to create user" e)
+          (response/internal-server-error {:error "failed to create user"}))))))
 
-(defn update-user! [{:keys [pass] :as user}]
+(defn update-user! [update-session? {{:keys [id pass] :as user} :params session :session}]
   (if-let [errors (v/validate-update-user user)]
     (do
       (log/error "error updating user:" errors)
       (response/bad-request {:error "invalid user"}))
     (try
-      (response/ok
-        (if pass
-          (db/update-user-with-pass! (update user :pass hashers/encrypt))
-          (db/update-user! user)))
+      (if pass
+        (db/update-user-with-pass! (update user :pass hashers/encrypt))
+        (db/update-user! user))
+      (if update-session?
+        (-> (response/ok)
+            (assoc :session (assoc session :identity (dissoc user :pass :confirm-pass))))
+        (response/ok))
       (catch Exception e
         (log/error "failed to update user" e)
         (response/internal-server-error {:error "failed to update user"})))))
@@ -43,10 +58,11 @@
   [id pass]
   (conman/with-transaction [db/*db*]
     (when-let [user (db/get-user-by-id {:id id})]
-      (when (hashers/check pass (:pass user))
-        (db/update-user-last-login! {:id id})
-        (-> user
-            (dissoc :pass :last-login :is-active))))))
+      (when (:active user)
+        (when (hashers/check pass (:pass user))
+          (db/update-user-last-login! {:id id})
+          (-> user
+              (dissoc :pass)))))))
 
 (defn login! [{{:keys [id pass redirect]} :params session :session}]
   (if-let [user (authenticate! id pass)]
