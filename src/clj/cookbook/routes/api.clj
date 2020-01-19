@@ -14,8 +14,10 @@
     ["" {:get  {:handler recipes/get-recipes}
          :post {:handler recipes/create-recipe!}
          :put  {:handler recipes/update-recipe!}}]
-    ["/:id" {:get {:parameters {:path {:id s/Int}}
-                   :handler    recipes/get-recipe-by-id}}]]
+    ["/:id" {:get    {:parameters {:path {:id s/Int}}
+                      :handler    recipes/get-recipe-by-id}
+             :delete {:parameters {:path {:id s/Int}}
+                      :handler    recipes/delete-recipe!}}]]
    ["/profile" {:put {:handler (partial auth/update-user! true)}}]
    ["/admin"
     {:middleware [middleware/wrap-enforce-admin]}

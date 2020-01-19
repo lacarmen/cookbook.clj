@@ -25,6 +25,17 @@
             :on-success           [:common/navigate! :cookbook.routes/view-recipe]}}))
 
 (rf/reg-event-fx
+  :http/delete-recipe
+  (fn [_ [resource-id id]]
+    {:http {:method               ajax/DELETE
+            :url                  (str "/api/recipes/" id)
+            :resource-id          resource-id
+            :skip-loading-screen? true
+            :on-success           #(do
+                                     (rf/dispatch [:modal/close-modal :delete-recipe])
+                                     (rf/dispatch [:common/navigate! :cookbook.routes/home]))}}))
+
+(rf/reg-event-fx
   :http/load-tags
   (fn [_ [resource-id]]
     {:http {:method      ajax/GET

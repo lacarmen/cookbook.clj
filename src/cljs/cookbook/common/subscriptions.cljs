@@ -31,6 +31,14 @@
     (boolean (not-empty (:http/pending-resources db)))))
 
 (rf/reg-sub
+  :modal/display-modal
+  (fn [db _]
+    (->> (:modals db)
+         (sort-by (fn [[_ args]] (:at args)) >)
+         (first)
+         (second))))
+
+(rf/reg-sub
   :db
   (fn [db _]
     db))

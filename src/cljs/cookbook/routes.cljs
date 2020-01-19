@@ -1,10 +1,14 @@
 (ns cookbook.routes
   (:require
+    ;; pages
     [cookbook.auth.views :refer [login-page]]
     [cookbook.home.views :refer [home-page]]
     [cookbook.profile.views :refer [profile-page]]
     [cookbook.recipe.views :refer [view-recipe-page edit-recipe-page]]
     [cookbook.users.views :refer [users-page]]
+    ;;
+    [cookbook.modals :as modals]
+    ;;
     [re-frame.core :as rf]
     [reagent.core :as r]
     ["react-beautiful-dnd" :as dnd]
@@ -51,6 +55,8 @@
       [page]
       [:div
        [navbar]
+       (when-let [display-modal @(rf/subscribe [:modal/display-modal])]
+         [modals/modal display-modal])
        (if (and @(rf/subscribe [:http/loading?])
                 (not @(rf/subscribe [:http/skip-loading-screen])))
          [:div.pageloader.has-background-warning.is-active

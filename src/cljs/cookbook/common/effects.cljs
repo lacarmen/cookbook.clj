@@ -10,6 +10,11 @@
     (sequential? f) #(do (rf/dispatch [:http/set-loaded resource-id])
                          (rf/dispatch (conj f %)))))
 
+(rf/reg-cofx
+  :now
+  (fn [cofx _]
+    (assoc cofx :now (.getTime (js/Date.)))))
+
 (rf/reg-fx
   :http
   (fn [{:keys [method url resource-id params on-success on-error skip-delay? skip-loading-screen?]

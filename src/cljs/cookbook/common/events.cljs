@@ -29,7 +29,7 @@
     (let [old-match (:common/route db)
           new-match (assoc match :controllers
                                  (rfc/apply-controllers (:controllers old-match) match))]
-      {:db (assoc db :common/route new-match)
+      {:db       (assoc db :common/route new-match)
        :dispatch [:http/set-loading :page]})))
 
 (rf/reg-fx
@@ -104,3 +104,20 @@
         (update :http/pending-resources disj resource-id)
         (update :http/pending-resources disj :page)
         (dissoc :http/skip-loading-screen))))
+
+;; modals
+
+(rf/reg-event-fx
+  :modal/display-modal
+  (rf/inject-cofx :now)
+  (fn [{:keys [db now]} [_ modal-id args]]
+    {:db (assoc-in db
+                   [:modals modal-id]
+                   {:id   modal-id
+                    :args args
+                    :at   now})}))
+
+(rf/reg-event-db
+  :modal/close-modal
+  (fn [db [_ modal-id]]
+    (update db :modals dissoc modal-id)))

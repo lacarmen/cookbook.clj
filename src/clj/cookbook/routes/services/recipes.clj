@@ -41,9 +41,10 @@
 
 (defn create-recipe! [{:keys [params session]}]
   (try
-    (let [author      (select-keys (:identity session) [:id :first-name :last-name])
-          recipe      (->recipe params)
-          returned-id (db/create-recipe! (assoc recipe :author author))]
+    (let [recipe      (-> params
+                          (->recipe)
+                          (assoc :author (get-in session [:identity :id])))
+          returned-id (db/create-recipe! recipe)]
       (response/ok returned-id))
     (catch Exception e
       (log/error "failed to create recipe" e)
@@ -52,8 +53,15 @@
 (defn update-recipe! [{:keys [params]}]
   (try
     (let [recipe (->recipe params)]
-      (db/update-recipe! recipe)
-      (response/ok {:id (:id recipe)}))
+      (response/ok (db/update-recipe! recipe)))
     (catch Exception e
-      (log/error "failed to udpate recipe" e)
-      (response/internal-server-error {:error "failed to udpate recipe"}))))
+      (log/error "failed to update recipe" e)
+      (response/internal-server-error {:error "failed to update recipe"}))))
+
+(defn delete-recipe! [{:keys [parameters]}]
+  (try
+    (db/delete-recipe! (:path parameters))
+    (response/ok)
+    (catch Exception e
+      (log/error "failed to delete recipe" e)
+      (response/internal-server-error {:error "failed to delete recipe"}))))

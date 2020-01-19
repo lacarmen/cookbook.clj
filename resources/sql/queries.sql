@@ -41,9 +41,9 @@ where id = :id
 delete from users
 where id = :id
 
-
 -- :name get-tags :? :*
 select tags from recipe
+where deleted is not true
 
 -- :name get-recipe-headers :? :*
 select id, recipe->>'title' as title, recipe->>'description' as description, tags from recipe
@@ -54,16 +54,17 @@ select r.id, r.tags, r.recipe, u.first_name || ' ' || u.last_name as author, r.l
 from recipe r join users u on r.author = u.id
 where r.id = :id
 
--- :name create-recipe! :<!
+-- :name create-recipe! :<! :1
 insert into recipe
 (tags, recipe, author)
 values (:tags, :recipe, :author)
 returning id
 
--- :name update-recipe! :! :n
+-- :name update-recipe! :<! :1
 update recipe
 set tags = :tags, recipe = :recipe, last_updated = now()
 where id = :id
+returning id
 
 -- :name delete-recipe! :! :n
 update recipe

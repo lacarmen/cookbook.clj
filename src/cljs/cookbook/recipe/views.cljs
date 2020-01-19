@@ -24,7 +24,8 @@
      "Save"]]])
 
 (defn view-recipe-page []
-  (let [recipe @(rf/subscribe [:recipe])]
+  (let [recipe    @(rf/subscribe [:recipe])
+        delete-fn #(rf/dispatch [:http/delete-recipe (:id recipe)])]
     [:section.section>div.container>div.content
      [:div.box.is-clearfix
       [:h2.title.is-2 (:title recipe)]
@@ -47,6 +48,8 @@
        [:p "Written by: " (:author recipe)]]
       [:div.buttons.is-pulled-right
        [:button.button
+        {:on-click (fn []
+                     (rf/dispatch [:modal/display-modal :delete-recipe {:delete-fn delete-fn}]))}
         "Delete"]
        [:button.button.is-warning
         {:on-click #(rf/dispatch [:common/navigate! :cookbook.routes/edit-recipe {:id (:id recipe)}])}
