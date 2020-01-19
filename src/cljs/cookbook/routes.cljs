@@ -57,6 +57,8 @@
        [navbar]
        (when-let [display-modal @(rf/subscribe [:modal/display-modal])]
          [modals/modal display-modal])
+       (when-let [error @(rf/subscribe [:common/error])]
+         [modals/modal {:id :error :args error}])
        (if (and @(rf/subscribe [:http/loading?])
                 (not @(rf/subscribe [:http/skip-loading-screen])))
          [:div.pageloader.has-background-warning.is-active

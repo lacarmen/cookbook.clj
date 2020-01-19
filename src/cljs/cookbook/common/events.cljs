@@ -54,8 +54,8 @@
 
 (rf/reg-event-db
   :common/ajax-error
-  (fn [db _]
-    (assoc db :common/error "Error completing the request")))
+  (fn [db [_ {:keys [error]}]]
+    (assoc db :common/error (or error "Error completing the request"))))
 
 (rf/reg-event-fx
   :common/run-if-repainting
